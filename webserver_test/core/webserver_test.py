@@ -1,6 +1,9 @@
 import asyncio
 from ..utils import dataset as ds
 from ..utils import send_requests as send_req
+from .analyzer import WtestAnalyzer
+from .mail_sender import WTestMailSender
+from .logs.collector import LogsCollectorAfterTest
 import time
 
 
@@ -10,7 +13,7 @@ REQUEST_STNGS = {
     }
 
 
-class CommonWebSrvTest():
+class CommonWebSrvTest:
     def __init__(self, host_groups, services, rqst_stngs=None) -> None:
         print("# 0.\tInitialization...")
         self.host_groups = host_groups
@@ -22,14 +25,15 @@ class CommonWebSrvTest():
         if type(services) == list:
             self.services = dict.fromkeys(host_groups, services)
         self.hosts_df = None
-        self.websrvtest_df = None
+        self.rqsts_df = None
         self.dataset = None
+        self.txt_summary = {}
 
     def _to_scv(self) -> None:
         if self.hosts_df is not None:
             self.hosts_df.to_csv("data/hosts.csv")
-        if self.websrvtest_df is not None:
-            self.websrvtest_df.to_csv("data/websrvtest_result.csv")
+        if self.rqsts_df is not None:
+            self.rqsts_df.to_csv("data/websrvtest_result.csv")
         if self.dataset is not None:
             self.dataset.to_csv("data/dataset.csv")
 
@@ -46,7 +50,7 @@ class CommonWebSrvTest():
         asynctask_results = asyncio.run(send_req.websrvtest_tasks(self.dataset, self.rqst_stngs))
         elapsed = time.time()-initial_time
         print("\tSending finished! Elapsed: {:.2f} sec".format(elapsed))
-        self.websrvtest_df = ds.join_testresult_dataset(asynctask_results, self.dataset)
+        self.rqsts_df = ds.join_testresult_dataset(asynctask_results, self.dataset)
         self._to_scv()
 
     def _make_txt_summary(self) -> None:
@@ -58,7 +62,7 @@ class CommonWebSrvTest():
         if not self.no_errors.empty:
             no_errors_list = self.no_errors.loc[:, LITE_REPORT_COL].values.tolist()
             self.txt_summary["no_errors"] = "\n".join(["{}, {} ({}): {}, status_code {}".format(*items) for items in no_errors_list])
-        res_list = self.websrvtest_df.loc[:, LITE_REPORT_COL].values.tolist()
+        res_list = self.rqsts_df.loc[:, LITE_REPORT_COL].values.tolist()
         self.txt_summary["all"] = "\n".join(["{}, {} ({}): {}, status_code {}".format(*items) for items in res_list])
 
     def run(self):
@@ -69,10 +73,48 @@ class CommonWebSrvTest():
             return {"all": "ERROR"}
         else:
             self._run_websrvtest_tasks()
-            self.no_errors = self.websrvtest_df.query("status_code =='200'")
-            self.errors = self.websrvtest_df.query("status_code !='200'")
+            self.no_errors = self.rqsts_df.query("status_code =='200'")
+            self.errors = self.rqsts_df.query("status_code !='200'")
             self._make_txt_summary()
-            return self.txt_summary
+
+    def analyze(self, err_threshold=10):
+        if self.errors is not None and not self.errors.empty:
+            self.anlzr = WtestAnalyzer(self.rqsts_df, err_threshold)
+            txt_res = self.anlzr.txt
+        elif self.errors:
+            txt_res = "http тест завершен. Ошибок не найдено!"
+        else:
+            txt_res = "http тест не был вполнен!"
+        return txt_res
+
+
+class WebSrvTestWithLogs(CommonWebSrvTest):
+    def __init__(self, host_groups, services, err_threshold=10, rqst_stngs=None, key=None) -> None:
+        super().__init__(host_groups, services, rqst_stngs)
+        self.key = key
+        self.logs = None
+        self.err_threshold = err_threshold
+
+    def _get_logs(self):
+        if self.key:
+            print("\n# 3. Getting logs...")
+            logs_collector = LogsCollectorAfterTest()
+            logs_collector.run(self)
+            logs = logs_collector.logs
+            return logs
+        return None
+
+    def run(self):
+        txt_summary = super().run()
+        self.findings = self.analyze(self.err_threshold)
+        self.logs = self._get_logs()
+        return txt_summary
+
+
+class WebSrvTestWithAlerts(WebSrvTestWithLogs):
+    def sendmail(self, auth, to_dict, subject):
+        mail_sndr = WTestMailSender(auth, self, to_dict, subject)
+        mail_sndr.sendmail()
 
 
 if __name__ == '__main__':

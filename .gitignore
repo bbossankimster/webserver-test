@@ -2,6 +2,7 @@
 hidden.py
 .vscode
 data/
+keys/
 _magic_backup/
 
 # Byte-compiled / optimized / DLL files

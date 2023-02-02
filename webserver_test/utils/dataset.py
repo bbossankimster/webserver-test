@@ -19,7 +19,7 @@ def make_dataset(hosts_df, services):
         grp_name = server_data['group_name']
         for service in services[grp_name]:
             server_data_mod = server_data.copy()
-            server_data_mod['url'] = URL_TMPLT.format(port=PORTS[service], ip=server_data['host_ip'], page="")
+            server_data_mod['url'] = URL_TMPLT.format(port=PORTS[service], ip=server_data['host_ip'], page=service+".html")
             server_data_mod['service_name'] = service
             server_data_list.append(server_data_mod)
     dataset = pd.DataFrame(server_data_list).reset_index(drop=True)
