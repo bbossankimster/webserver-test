@@ -5,6 +5,7 @@ from .analyzer import WtestAnalyzer
 from .mail_sender import WTestMailSender
 from .logs.collector import LogsCollectorAfterTest
 import time
+import os
 
 
 REQUEST_STNGS = {
@@ -28,8 +29,12 @@ class CommonWebSrvTest:
         self.rqsts_df = None
         self.dataset = None
         self.txt_summary = {}
+        self.findings = None
 
     def _to_scv(self) -> None:
+        DATA_DIR = os.path.join(os.getcwd(), 'data')
+        if not os.path.exists(DATA_DIR):
+            os.mkdir(DATA_DIR)
         if self.hosts_df is not None:
             self.hosts_df.to_csv("data/hosts.csv")
         if self.rqsts_df is not None:
@@ -70,14 +75,14 @@ class CommonWebSrvTest:
             self._data_compilation()
         except ValueError as e:
             print(e)
-            return {"all": "ERROR"}
+            self.txt_summary = {"all": "ERROR"}
         else:
             self._run_websrvtest_tasks()
             self.no_errors = self.rqsts_df.query("status_code =='200'")
             self.errors = self.rqsts_df.query("status_code !='200'")
             self._make_txt_summary()
 
-    def analyze(self, err_threshold=10):
+    def analyze(self, err_threshold=10) -> str:
         if self.errors is not None and not self.errors.empty:
             self.anlzr = WtestAnalyzer(self.rqsts_df, err_threshold)
             txt_res = self.anlzr.txt
@@ -85,6 +90,7 @@ class CommonWebSrvTest:
             txt_res = "http тест завершен. Ошибок не найдено!"
         else:
             txt_res = "http тест не был вполнен!"
+        self.findings = txt_res
         return txt_res
 
 
@@ -97,7 +103,7 @@ class WebSrvTestWithLogs(CommonWebSrvTest):
 
     def _get_logs(self):
         if self.key:
-            print("\n# 3. Getting logs...")
+            print("\n# 3\tGetting logs...")
             logs_collector = LogsCollectorAfterTest()
             logs_collector.run(self)
             logs = logs_collector.logs
