@@ -39,21 +39,26 @@ class MailSender:
                 smtp.ehlo()
                 smtp.login(user=self.auth["username"], password=self.auth["passwd"])
                 smtp.sendmail(message["From"], message["To"], message.as_string())
+            error = None
         except Exception as e:
-            print("\n#\tException error!\n{}\nCan not send mail to {}".format(e, message["To"]))
+            error = "\n#\tException error!\n{}\nCan not send mail to {}".format(e, message["To"])
+        return error
 
 
 class WTestMailSender(MailSender):
-    def __init__(self, auth, wtest, to_list_dict, subject, **kwargs):
+    def __init__(self, auth, wtest, to_string, subject, **kwargs):
         sender_email = auth["username"]
-        attachments = self._make_attachments(wtest, to_list_dict)
+        attachments = self._make_attachments(wtest, to_string)
         super().__init__(auth, sender_email, self.to_list, subject, attachments, **kwargs)
 
-    def _make_attachments(self, wtest, to_list_dict):
+    def _make_attachments(self, wtest, to_string):
         buffer = StringIO()
+        emails_to = [val.split(",") for val in to_string.split(";")]
+        if len(emails_to) == 1:
+            emails_to.append(emails_to[0])
         if not wtest.errors.empty:
             errors = wtest.errors[COL_TO_PRINT]
-            self.to_list = to_list_dict["errors"]
+            self.to_list = emails_to[0]
             begin = ""
             if wtest.findings:
                 begin = "<h3>{}</h3><br>".format("<br>".join(wtest.findings.split("\n")))
@@ -66,7 +71,7 @@ class WTestMailSender(MailSender):
             attachments = [html, csv]
         else:
             no_errors = wtest.no_errors[COL_TO_PRINT]
-            self.to_list = to_list_dict["no_errors"]
+            self.to_list = emails_to[1]
             html = {"content": no_errors.to_html(), "type": "html"}
             wtest.no_errors.to_csv(buffer)
             csv = {"content": buffer, "type": "csv", "name": "test_result_no_errors.csv"}
