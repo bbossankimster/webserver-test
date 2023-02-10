@@ -1,9 +1,11 @@
 # Custom ignore rules
 hidden.py
 .vscode
+*.conf
 data/
 keys/
 _magic_backup/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
