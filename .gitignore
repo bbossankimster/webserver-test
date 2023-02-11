@@ -5,6 +5,7 @@ hidden.py
 data/
 keys/
 _magic_backup/
+test_tmplt.py
 
 
 # Byte-compiled / optimized / DLL files
