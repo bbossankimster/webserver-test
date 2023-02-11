@@ -2,7 +2,7 @@ import pandas as pd
 from io import StringIO
 import asyncio
 from .logs import WebServerLogs
-from webserver_test.utils import dat_files as dat_files
+from ...utils import dat_files as dat_files
 
 
 LOG_COL = [

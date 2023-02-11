@@ -1,7 +1,7 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
-from webserver_test.utils.mail_attachment import add_attachment
+from ..utils.mail_attachment import add_attachment
 from io import StringIO
 
 COL_TO_PRINT = ['group_name', 'host_label', 'host_ip', 'service_name', 'status_code']

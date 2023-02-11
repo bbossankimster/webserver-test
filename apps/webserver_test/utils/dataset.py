@@ -12,7 +12,7 @@ PORTS = {
 }
 
 
-def make_dataset(hosts_df, services):
+def make_dataset(hosts_df, services: dict):
     server_data_list = []
     for host_index in hosts_df.index:
         server_data = hosts_df.loc[host_index]
