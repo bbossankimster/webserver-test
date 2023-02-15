@@ -86,7 +86,7 @@ class CommonWebSrvTest:
         if self.errors is not None and not self.errors.empty:
             self.anlzr = WtestAnalyzer(self.rqsts_df, err_threshold)
             txt_res = self.anlzr.txt
-        elif self.errors:
+        elif self.errors is not None:
             txt_res = "http тест завершен. Ошибок не найдено!"
         else:
             txt_res = "http тест не был вполнен!"
@@ -108,7 +108,7 @@ class WebSrvTestWithLogs(CommonWebSrvTest):
             logs_collector.run(self)
             logs = logs_collector.logs
             return logs
-        return None
+        raise ValueError("EXCEPTION ERROR: key not found")
 
     def run(self):
         txt_summary = super().run()
@@ -120,7 +120,8 @@ class WebSrvTestWithLogs(CommonWebSrvTest):
 class WebSrvTestWithAlerts(WebSrvTestWithLogs):
     def sendmail(self, auth, to_dict, subject):
         mail_sndr = WTestMailSender(auth, self, to_dict, subject)
-        mail_sndr.sendmail()
+        is_failed = mail_sndr.sendmail()
+        return is_failed
 
 
 if __name__ == '__main__':
