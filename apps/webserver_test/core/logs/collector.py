@@ -3,6 +3,7 @@ from io import StringIO
 import asyncio
 from .logs import WebServerLogs
 from ...utils import dat_files as dat_files
+from subprocess import PIPE, STDOUT
 
 
 LOG_COL = [
@@ -10,8 +11,9 @@ LOG_COL = [
     'bytes_sent', 'http_user_agent', 'host_ip'
     ]
 
+# -o ServerAliveInterval=2
 GREP_APP_LOGS_TAIL = "grep -hw {host} /var/log/nginx/access.log | tail -5"
-SSH_TMPLT = 'ssh -o ConnectTimeout=5 -i {key} root@{host} "{cmd}"'
+SSH_TMPLT = 'ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -o ConnectionAttempts=2 -i {key} root@{host} "{cmd}"'
 
 
 class CommonLogsCollector:
@@ -20,12 +22,14 @@ class CommonLogsCollector:
         self.save_to = save_to
 
     async def _read_logs_by_ssh(self, cmd):
-        proc = await asyncio.create_subprocess_shell(cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        stdout, stderr = await proc.communicate()
-        if len(stdout) > 0:
-            logs_df = pd.read_csv(StringIO(stdout.decode()), delimiter=' ', encoding='iso-8859-1', skipinitialspace=True, names=LOG_COL)
-        else:
-            logs_df = pd.DataFrame(columns=LOG_COL)
+        proc = await asyncio.create_subprocess_shell(cmd, stdout=PIPE, stderr=PIPE)
+        stdout, _ = await proc.communicate()
+        if proc.returncode == 0:
+            out = stdout.decode()
+            if len(out) > 0:
+                logs_df = pd.read_csv(StringIO(stdout.decode()), delimiter=' ', encoding='iso-8859-1', skipinitialspace=True, names=LOG_COL)
+                return logs_df
+        logs_df = pd.DataFrame(columns=LOG_COL)
         return logs_df
 
     async def _readlogs_tasks(self, cmd_list):
@@ -71,7 +75,9 @@ class LogsCollectorAfterTest(CommonLogsCollector):
         logs_list = list(enumerate(logs_list))
         logs = WebServerLogs(logs_list)
         if logs.raw != []:
+            print("+=========not empty===========")
             self.logs = logs
             self._save_logs(logs_list)
         else:
+            print("+=======logs emptty=============")
             self.logs = None
