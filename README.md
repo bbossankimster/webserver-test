@@ -183,10 +183,10 @@ usage: start_webservertest.py [-h] [-d HOST_DOMAINS] [-a WEB_APPLICATIONS] [-t E
 python.exe .\start_webservertest.py simple -d customer_1.site.com -a reports,support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     - 100% ошибок
-    ![](images/exec_result_1_1.png)
+![](images/exec_result_1_1.png)
 
     - часть с ошибками, часть без ошибок
-    ![](images/exec_result_1_2.png)
+![](images/exec_result_1_2.png)
     
 2.2 Пример: запуск http проверки со сбором логов
 
@@ -194,8 +194,8 @@ python.exe .\start_webservertest.py simple -d customer_1.site.com -a reports,sup
 python.exe .\start_webservertest.py with_logs_gathering -d customer_1.site.com -a reports,support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    - Результат выполнения
-    ![](images/exec_result_2.png)
+Результат выполнения
+![](images/exec_result_2.png)
 
 - 2.3 Пример: запуск http проверки со сбором логов и отправкой отчета на email
 
@@ -203,12 +203,12 @@ python.exe .\start_webservertest.py with_logs_gathering -d customer_1.site.com -
 python.exe .\start_webservertest.py with_alerts_sending -d customer_1.site.com -a reports,support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    - Результаты отправки отчета на email
-    ![](images/exec_result_3_1.png)
+Результаты отправки отчета на email
+![](images/exec_result_3_1.png)
     
-    ![](images/exec_result_3_2.png)
+![](images/exec_result_3_2.png)
     
-    ![](images/exec_result_3_2.png)
+![](images/exec_result_3_2.png)
 
 <a name="тесты"></a> 
 
