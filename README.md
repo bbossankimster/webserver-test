@@ -208,7 +208,7 @@ python.exe .\start_webservertest.py with_alerts_sending -d customer_1.site.com -
     
 ![](images/exec_result_3_2.png)
     
-![](images/exec_result_3_2.png)
+![](images/exec_result_3_3.png)
 
 <a name="тесты"></a> 
 
