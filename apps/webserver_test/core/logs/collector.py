@@ -75,9 +75,7 @@ class LogsCollectorAfterTest(CommonLogsCollector):
         logs_list = list(enumerate(logs_list))
         logs = WebServerLogs(logs_list)
         if logs.raw != []:
-            print("+=========not empty===========")
             self.logs = logs
             self._save_logs(logs_list)
         else:
-            print("+=======logs emptty=============")
             self.logs = None
